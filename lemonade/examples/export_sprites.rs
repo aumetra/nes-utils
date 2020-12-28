@@ -12,21 +12,14 @@ fn main() {
 
     let ines = ines_parser::Ines::from_reader(&mut file).unwrap();
     let chr_rom = ines.chr_rom.unwrap();
-    let sprites = lemonade::Sprites::new(&chr_rom);
+    let sprites = lemonade::Lemonade::new(&chr_rom);
 
     fs::create_dir("sprites").ok();
-    for (index, sprite) in sprites.enumerate() {
+    for (index, sprite) in sprites.into_iter().enumerate() {
         let rgb_values = sprite
             .to_rgb(lemonade::ColourPalette::CLASSIC_MARIO)
-            .into_iter()
-            .map(|val| {
-                val.to_vec()
-                    .into_iter()
-                    .map(|colour| colour.raw_colour().to_vec())
-                    .flatten()
-                    .collect::<Vec<_>>()
-            })
-            .flatten()
+            .iter()
+            .flat_map(|item| item.iter().flat_map(|colour| colour.raw_colour().to_vec()))
             .collect::<Vec<_>>();
 
         let mut sprite_file = File::create(format!("sprites/{}.png", index)).unwrap();

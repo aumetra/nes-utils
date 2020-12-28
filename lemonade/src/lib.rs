@@ -1,6 +1,9 @@
+#![no_std]
 #![warn(clippy::all, clippy::pedantic)]
 
-use std::slice::ChunksExact;
+extern crate alloc;
+
+use {alloc::vec::Vec, core::slice::ChunksExact};
 
 // One sprite has the size of 16 bytes
 const SPRITE_SIZE: usize = 16;
@@ -118,11 +121,11 @@ impl<'a> Sprite<'a> {
 }
 
 #[derive(Clone)]
-pub struct Sprites<'a> {
+pub struct Lemonade<'a> {
     sprites: ChunksExact<'a, u8>,
 }
 
-impl<'a> Sprites<'a> {
+impl<'a> Lemonade<'a> {
     #[must_use]
     pub fn new(data: &'a [u8]) -> Self {
         let sprites = data.chunks_exact(SPRITE_SIZE);
@@ -136,7 +139,7 @@ impl<'a> Sprites<'a> {
     }
 }
 
-impl<'a> Iterator for Sprites<'a> {
+impl<'a> Iterator for Lemonade<'a> {
     type Item = Sprite<'a>;
 
     fn next(&mut self) -> Option<Self::Item> {
