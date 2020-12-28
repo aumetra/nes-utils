@@ -54,8 +54,8 @@ impl Colour {
 }
 
 impl From<[u8; 3]> for Colour {
-    fn from(raw_rgb: [u8; 3]) -> Self {
-        Self::new(raw_rgb[0], raw_rgb[1], raw_rgb[2])
+    fn from([r, g, b]: [u8; 3]) -> Self {
+        Self::new(r, g, b)
     }
 }
 
@@ -119,9 +119,9 @@ impl<'a> Sprite<'a> {
 
         // We have to do this to avoid having to use alloc
         let mut rgb_data = [[Colour::default(); SPRITE_WIDTH_HEIGHT]; SPRITE_WIDTH_HEIGHT];
-        for data_ref in &mut rgb_data {
-            *data_ref = rgb_iterator.next().unwrap();
-        }
+        rgb_data
+            .iter_mut()
+            .for_each(|data_ref| *data_ref = rgb_iterator.next().unwrap());
 
         rgb_data
     }
