@@ -1,15 +1,13 @@
 #![no_std]
 #![warn(clippy::all, clippy::pedantic)]
 
-extern crate alloc;
-
-use {alloc::vec::Vec, core::slice::ChunksExact};
+use core::slice::ChunksExact;
 
 // One sprite has the size of 16 bytes
 const SPRITE_SIZE: usize = 16;
 const SPRITE_WIDTH_HEIGHT: usize = 8;
 
-pub type RgbSprite = Vec<[Colour; SPRITE_WIDTH_HEIGHT]>;
+pub type RgbSprite = [[Colour; SPRITE_WIDTH_HEIGHT]; SPRITE_WIDTH_HEIGHT];
 
 #[derive(Clone, Copy, Debug)]
 pub struct ColourPalette {
@@ -85,15 +83,17 @@ impl<'a> Sprite<'a> {
     pub fn to_rgb(&self, colour_palette: ColourPalette) -> RgbSprite {
         let mut byte_chunks = self.raw_sprite_data.chunks_exact(SPRITE_WIDTH_HEIGHT);
 
-        byte_chunks
+        let mut rgb_iterator = byte_chunks
             .next()
             .unwrap()
             .iter()
             .zip(byte_chunks.next().unwrap())
             .map(|(first_byte, second_byte)| {
-                let mut colour_data = [Colour::default(); 8];
+                let mut colour_data = [Colour::default(); SPRITE_WIDTH_HEIGHT];
 
-                for i in 0..8 {
+                // Won't be truncated because 8 fits easily into a byte
+                #[allow(clippy::cast_possible_truncation)]
+                for i in 0..SPRITE_WIDTH_HEIGHT as u8 {
                     // None of the bits is set => Background colour
                     // The bit of the first byte is set => First colour
                     // The bit of the second byte is set => Second colour
@@ -102,12 +102,12 @@ impl<'a> Sprite<'a> {
                     if bit_at(*first_byte, i) && bit_at(*second_byte, i) {
                         // Colour 3
                         colour_data[i as usize] = colour_palette.colours[2];
-                    } else if bit_at(*first_byte, i) {
-                        // Colour 1
-                        colour_data[i as usize] = colour_palette.colours[0];
                     } else if bit_at(*second_byte, i) {
                         // Colour 2
                         colour_data[i as usize] = colour_palette.colours[1];
+                    } else if bit_at(*first_byte, i) {
+                        // Colour 1
+                        colour_data[i as usize] = colour_palette.colours[0];
                     } else {
                         // Background
                         colour_data[i as usize] = colour_palette.background;
@@ -115,8 +115,15 @@ impl<'a> Sprite<'a> {
                 }
 
                 colour_data
-            })
-            .collect::<Vec<_>>()
+            });
+
+        // We have to do this to avoid having to use alloc
+        let mut rgb_data = [[Colour::default(); SPRITE_WIDTH_HEIGHT]; SPRITE_WIDTH_HEIGHT];
+        for data_ref in &mut rgb_data {
+            *data_ref = rgb_iterator.next().unwrap();
+        }
+
+        rgb_data
     }
 }
 
