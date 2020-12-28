@@ -23,7 +23,7 @@ const TRAINER_SIZE: usize = 512;
 const PRG_ROM_CHUNK_SIZE: usize = 16_384;
 const CHR_ROM_CHUNK_SIZE: usize = 8192;
 
-type Result<T, E = Error> = std::result::Result<T, E>;
+type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
