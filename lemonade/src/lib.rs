@@ -87,7 +87,7 @@ impl<'a> Sprite<'a> {
             .unwrap()
             .iter()
             .zip(byte_chunks.next().unwrap())
-            .map(|(second_byte, first_byte)| {
+            .map(|(first_byte, second_byte)| {
                 let mut colour_data = [Colour::default(); 8];
 
                 for i in 0..8 {
@@ -100,11 +100,11 @@ impl<'a> Sprite<'a> {
                         // Colour 3
                         colour_data[i as usize] = colour_palette.colours[2];
                     } else if bit_at(*first_byte, i) {
-                        // Colour 2
-                        colour_data[i as usize] = colour_palette.colours[1];
-                    } else if bit_at(*second_byte, i) {
                         // Colour 1
                         colour_data[i as usize] = colour_palette.colours[0];
+                    } else if bit_at(*second_byte, i) {
+                        // Colour 2
+                        colour_data[i as usize] = colour_palette.colours[1];
                     } else {
                         // Background
                         colour_data[i as usize] = colour_palette.background;
