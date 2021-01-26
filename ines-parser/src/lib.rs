@@ -33,7 +33,7 @@ type Result<T> = core::result::Result<T, Error>;
 #[cfg_attr(feature = "std", derive(thiserror::Error))]
 pub enum Error {
     #[cfg(feature = "std")]
-    #[error("IO error")]
+    #[error("IO error: {:?}", .0)]
     Io(#[from] io::Error),
 
     #[cfg_attr(feature = "std", error("Magic bytes didn't match; expected {:?}, got {:?}", MAGIC_BYTES, .0))]
@@ -132,7 +132,7 @@ fn parse_header(header_data: &[u8]) -> Result<Header> {
 }
 
 impl<'a> Ines<'a> {
-    /// Parse a INES ROM from a byte slice
+    /// Parse an INES ROM from a byte slice
     pub fn from_bytes(data: &'a [u8]) -> Result<Self> {
         // It doesn't matter whether we use the first 16 bytes or the whole thing
         // The function will ignore any data after the first 7 bytes or so anyway
@@ -170,7 +170,7 @@ impl<'a> Ines<'a> {
     }
 
     #[cfg(feature = "std")]
-    /// Parse a INES ROM from a file stream
+    /// Parse an INES ROM from a file stream
     pub fn from_reader<T: Read>(input_stream: &mut T) -> Result<Self> {
         let mut header = [0; HEADER_SIZE];
         input_stream.read_exact(&mut header)?;
