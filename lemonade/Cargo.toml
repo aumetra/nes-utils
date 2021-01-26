@@ -11,4 +11,4 @@ license = "MIT"
 
 [dev-dependencies]
 image = { version = "0.23", default-features = false, features = [ "png" ] }
-ines-parser = { path = "../ines-parser" }
+ines-parser = { path = "../ines-parser", features = [ "std" ] }

@@ -1,3 +1,4 @@
+#![cfg_attr(not(feature = "std"), no_std)]
 #![warn(clippy::all, clippy::pedantic)]
 #![allow(clippy::missing_errors_doc)]
 
@@ -7,11 +8,14 @@
 //! [File format documentation](http://wiki.nesdev.com/w/index.php/INES)
 //!
 
-use std::{
-    array::TryFromSliceError,
-    borrow::Cow,
-    convert::TryInto,
-    io::{self, Read},
+extern crate alloc;
+
+#[cfg(feature = "std")]
+use std::io::{self, Read};
+
+use {
+    alloc::borrow::Cow,
+    core::{array::TryFromSliceError, convert::TryInto},
 };
 
 // The word "NES" followed by the MS-DOS EOF delimiter
@@ -23,18 +27,26 @@ const TRAINER_SIZE: usize = 512;
 const PRG_ROM_CHUNK_SIZE: usize = 16_384;
 const CHR_ROM_CHUNK_SIZE: usize = 8192;
 
-type Result<T> = std::result::Result<T, Error>;
+type Result<T> = core::result::Result<T, Error>;
 
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug)]
+#[cfg_attr(feature = "std", derive(thiserror::Error))]
 pub enum Error {
+    #[cfg(feature = "std")]
     #[error("IO error")]
     Io(#[from] io::Error),
 
-    #[error("Magic bytes didn't match; expected {:?}, got {:?}", MAGIC_BYTES, .0)]
+    #[cfg_attr(feature = "std", error("Magic bytes didn't match; expected {:?}, got {:?}", MAGIC_BYTES, .0))]
     MagicBytesMismatch([u8; 4]),
 
-    #[error("TryFromSliceError")]
-    TryFromSlice(#[from] TryFromSliceError),
+    #[cfg_attr(feature = "std", error("TryFromSliceError"))]
+    TryFromSlice(TryFromSliceError),
+}
+
+impl From<TryFromSliceError> for Error {
+    fn from(err: TryFromSliceError) -> Self {
+        Self::TryFromSlice(err)
+    }
 }
 
 #[derive(Debug)]
@@ -75,8 +87,8 @@ pub struct Ines<'a> {
     pub chr_rom: Option<Cow<'a, [u8]>>,
 }
 
-fn bit_at(num: u8, idx: u8) -> bool {
-    (num >> idx) & 1 == 1
+fn bit_at(num: u8, offset: u8) -> bool {
+    (num >> offset) & 1 == 1
 }
 
 fn parse_header(header_data: &[u8]) -> Result<Header> {
@@ -157,6 +169,7 @@ impl<'a> Ines<'a> {
         })
     }
 
+    #[cfg(feature = "std")]
     /// Parse a INES ROM from a file stream
     pub fn from_reader<T: Read>(input_stream: &mut T) -> Result<Self> {
         let mut header = [0; HEADER_SIZE];

@@ -8,4 +8,8 @@ license = "MIT"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-thiserror = "1.0"
+thiserror = { version = "1.0", optional = true }
+
+[features]
+default = [ ]
+std = [ "thiserror" ]
